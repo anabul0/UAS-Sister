@@ -1,0 +1,27 @@
+// AUTOMATICALLY GENERATED: location from saved link.
+Map.setCenter(106.88629294794634, -6.364712334950134, 8)
+
+// 1. Tentukan area studi (Jakarta)
+var jakarta = ee.Geometry.Rectangle([106.7, -6.4, 107.1, -6.1]); // Bounding box Jakarta
+
+// 2. Ambil koleksi citra Landsat 8 (OLI/TIRS)
+var landsat8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA")
+  .filterBounds(jakarta) // Filter area Jakarta
+  .filterDate("2023-01-01", "2023-12-31") // Rentang waktu
+  .filter(ee.Filter.lt("CLOUD_COVER", 10)) // Filter awan < 10%
+  .median(); // Gabungkan citra menjadi satu komposit
+
+// 3. Tampilkan citra di peta dengan visualisasi RGB (Band 4-3-2)
+var visParams = {bands: ["B4", "B3", "B2"], min: 0, max: 0.3};
+Map.centerObject(jakarta, 10);
+Map.addLayer(landsat8, visParams, "Landsat 8 Jakarta");
+
+// 4. Ekspor citra ke Google Drive dalam format GeoTIFF
+Export.image.toDrive({
+  image: landsat8,
+  description: "Landsat8_Jakarta",
+  scale: 30, // Resolusi 30m
+  region: jakarta,
+  fileFormat: "GeoTIFF",
+  maxPixels: 1e13
+});
